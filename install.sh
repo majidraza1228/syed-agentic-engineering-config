@@ -7,12 +7,12 @@
 
 set -euo pipefail
 
-REPO="$HOME/src/agentic-config"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMUX_SRC="$REPO/tmux.conf"
 TMUX_DST="$HOME/.tmux.conf"
 ZSHRC="$HOME/.zshrc"
 SHELL_SRC="$REPO/shell.zsh"
-SHELL_LINE="source \"\$HOME/src/agentic-config/shell.zsh\"  # agentic-config"
+SHELL_LINE="source \"$REPO/shell.zsh\"  # agentic-config"
 SETTINGS="$HOME/.claude/settings.json"
 
 ts() { date +%Y%m%d-%H%M%S; }
@@ -37,7 +37,7 @@ else
 fi
 
 # --- zshrc source line ---
-if [ -f "$ZSHRC" ] && grep -Fq 'agentic-config/shell.zsh' "$ZSHRC"; then
+if [ -f "$ZSHRC" ] && grep -Fq "$REPO/shell.zsh" "$ZSHRC"; then
   say "~/.zshrc already sources shell.zsh"
 else
   {
@@ -48,7 +48,7 @@ else
 fi
 
 # --- chmod scripts ---
-chmod +x "$REPO/statusline.sh" "$REPO/statusline-daemon.sh" "$REPO/install.sh" "$REPO/bin/clip"
+chmod +x "$REPO/statusline.sh" "$REPO/statusline-daemon.sh" "$REPO/token-tracker.sh" "$REPO/token-report.sh" "$REPO/install.sh" "$REPO/bin/clip"
 
 # --- claude settings.json merge ---
 mkdir -p "$(dirname "$SETTINGS")"
@@ -62,14 +62,22 @@ else
   fi
   tmp=$(mktemp)
   jq \
-    --arg sl "$REPO/statusline.sh" \
-    --arg start "$REPO/statusline-daemon.sh start" \
-    --arg stop  "$REPO/statusline-daemon.sh stop" \
+    --arg sl         "$REPO/statusline.sh" \
+    --arg start      "$REPO/statusline-daemon.sh start" \
+    --arg stop       "$REPO/statusline-daemon.sh stop" \
+    --arg tok_start  "$REPO/token-tracker.sh start" \
+    --arg tok_stop   "$REPO/token-tracker.sh stop" \
     '
     .statusLine = { "type": "command", "command": $sl, "padding": 0 }
     | .hooks = ((.hooks // {})
-        | .SessionStart = [{ "hooks": [{ "type": "command", "command": $start }] }]
-        | .Stop         = [{ "hooks": [{ "type": "command", "command": $stop  }] }])
+        | .SessionStart = [{ "hooks": [
+            { "type": "command", "command": $start },
+            { "type": "command", "command": $tok_start }
+          ] }]
+        | .Stop = [{ "hooks": [
+            { "type": "command", "command": $stop },
+            { "type": "command", "command": $tok_stop }
+          ] }])
     ' "$SETTINGS" >"$tmp"
   mv "$tmp" "$SETTINGS"
   say "merged statusLine + hooks into $SETTINGS"

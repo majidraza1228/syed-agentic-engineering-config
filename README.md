@@ -77,15 +77,35 @@ Using multiple effort levels in parallel lets you route tasks by complexity with
 
 ### Changing the model
 
-Edit `shell.zsh` and replace `claude-opus-4-7` with any model alias Claude Code supports:
+The default is **`claude-opus-4-7`** (most capable). To switch, edit the `--model` flags in the `t()` function in `shell.zsh`. There are 4 occurrences — one per pane — so you can mix models across panes.
+
+| Model | Short alias | Context | Best for |
+|-------|-------------|---------|----------|
+| `claude-opus-4-7` | `opus` | 200k | Architecture, hard reasoning, complex tasks |
+| `claude-sonnet-4-6` | `sonnet` | 200k | Everyday coding, reviews, balanced cost/quality |
+| `claude-haiku-4-5` | `haiku` | 200k | Fast lookups, simple edits, high-volume tasks |
+
+**Change all 4 panes to Sonnet:**
 
 ```zsh
-# full model ID
---model claude-opus-4-6
-
-# or short alias
---model opus
+# In shell.zsh, replace every --model flag:
+--model claude-sonnet-4-6
+# or use the short alias:
 --model sonnet
+```
+
+**Mix models across panes** (e.g. Opus for hard problems, Sonnet for routine tasks):
+
+```zsh
+# Edit each write text line in t() independently:
+# s1/s2 (high effort) → claude-opus-4-7
+# s3/s4 (medium/low)  → claude-sonnet-4-6
+```
+
+**One-off session without editing `shell.zsh`:**
+
+```zsh
+claude --model sonnet --effort medium
 ```
 
 ### Locking pane titles in iTerm2
@@ -165,6 +185,58 @@ end tell
 ---
 
 ## Slash Commands
+
+### `/tokens` — Token usage tracker
+
+Shows how many tokens the current context window has consumed and logs per-session usage.
+
+```
+/tokens         # current window + recent session history (last 10)
+/tokens reset   # clear the session history log
+```
+
+#### How tokens are calculated
+
+Claude Code itself reports the token counts — this tool does **not** re-tokenize. On every assistant turn, Claude Code invokes `statusline.sh` and passes a JSON payload that includes a `context_window` block:
+
+| Field | Meaning |
+|-------|---------|
+| `total_input_tokens`   | Cumulative input tokens consumed in the current window |
+| `total_output_tokens`  | Cumulative output tokens produced in the current window |
+| `context_window_size`  | Max context for the active model (e.g. 200k for Opus 4.7) |
+| `used_percentage`      | Claude Code's own % used calculation |
+
+`token-report.sh` reads those numbers verbatim from the cached JSON and adds `input + output` to get a total. Percentage shown is whatever Claude Code reports, rounded to an integer.
+
+#### Where they're stored
+
+Two files under `~/.claude/`:
+
+| File | Written by | Contents |
+|------|------------|----------|
+| `~/.claude/.statusline.input`  | `statusline.sh` (every turn) | Last JSON payload from Claude Code — source for **current window** stats |
+| `~/.claude/token-log.jsonl`    | `token-tracker.sh` (`SessionStart` + `Stop` hooks) | One JSONL record per session event (`start`, `stop`) — source for **session history** |
+
+Each `stop` record looks like:
+
+```json
+{"event":"stop","ts":"2026-05-26T17:40:00Z","cwd":"/path/to/proj","model":"opus-4.7","input_tokens":98234,"output_tokens":12044,"ctx_max":200000}
+```
+
+The log is append-only and survives across restarts.
+
+#### How to reset
+
+| Goal | Command |
+|------|---------|
+| Reset the **current context window** (free up tokens in the running session) | `/clear` (built-in Claude Code command) |
+| Clear the **session history log** | `/tokens reset` — deletes `~/.claude/token-log.jsonl` |
+| Clear the **cached current-window stats** | `rm ~/.claude/.statusline.input` (regenerated on the next turn) |
+| Nuke everything | `rm ~/.claude/token-log.jsonl ~/.claude/.statusline.input` |
+
+`/clear` and `/tokens reset` are independent — clearing the context window does not touch the history log, and vice versa.
+
+---
 
 ### `/smell` — Code smell review
 
