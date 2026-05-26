@@ -219,7 +219,63 @@ claude --append-system-prompt "$(cat /tmp/auth-plan.md)" --effort medium
 
 ---
 
-## 7. Avoiding Common Mistakes
+## 7. Code Quality with `/smell`
+
+Run `/smell` before every PR to catch issues before review. It checks three catalogs against your git diff:
+
+### Clean Code (35 IDs)
+
+Key IDs to know:
+
+| ID | Smell |
+|----|-------|
+| `CC.G5` | Duplication — the most important smell; extract shared logic |
+| `CC.G30` | Function does more than one thing |
+| `CC.G34` | Function mixes abstraction levels |
+| `CC.G25` | Magic numbers — replace with named constants |
+| `CC.G28` | Complex conditionals — extract into named predicates |
+| `CC.N1` | Non-descriptive names |
+| `CC.F1` | Too many arguments (>3) |
+| `CC.F3` | Boolean flag args — function should be split in two |
+
+### Gang of Four (missing patterns + design smells)
+
+| ID | Signal |
+|----|--------|
+| `GOF.STRATEGY-MISSING` | Long if/elif on a type enum repeated across methods |
+| `GOF.OBSERVER-MISSING` | Hand-rolled listener loops or polling |
+| `GOF.FACTORY-MISSING` | Client directly instantiates concrete classes |
+| `DS.RIGIDITY` | One change cascades widely |
+| `DS.VISCOSITY` | Hacks are easier than correct fixes |
+
+### Python-specific (35 IDs)
+
+| ID | Smell |
+|----|-------|
+| `PY.BARE-EXCEPT` | `except:` swallows `KeyboardInterrupt`/`SystemExit` |
+| `PY.MUTABLE-DEFAULT` | `def f(x=[])` shares one list across all calls |
+| `PY.BLOCKING-IN-ASYNC` | Blocking I/O inside `async def` |
+| `PY.RAISE-WITHOUT-FROM` | `raise X()` in except loses the original traceback |
+| `PY.ASSERT-RUNTIME` | `assert` for runtime validation — stripped under `-O` |
+
+### Workflow
+
+```
+# Before opening a PR
+/smell
+
+# Against a specific base branch
+/smell develop
+
+# After a big refactor
+/smell main
+```
+
+Severity ladder: **BLOCKER** (security/correctness) → **HIGH** → **MEDIUM** → **LOW** → **NIT**. Fix BLOCKERs and HIGHs before merge; LOW/NIT are optional.
+
+---
+
+## 8. Avoiding Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|

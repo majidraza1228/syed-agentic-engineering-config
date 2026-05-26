@@ -18,6 +18,7 @@ Tested with **Claude Code CLI** on macOS + iTerm2.
 | `statusline-daemon.sh` | Background daemon that keeps the status line cache fresh every 2s |
 | `tmux.conf` | tmux config with vi keys, mouse support, and smart copy-to-clipboard |
 | `bin/clip` | Cross-platform clipboard shim (`pbcopy` / `wl-copy` / `xclip` / `xsel`) |
+| `.claude/commands/smell.md` | `/smell` slash command — code smell review (Clean Code + GoF + Python) |
 
 ---
 
@@ -159,6 +160,42 @@ end tell
 tell s1
     set s3 to (split horizontally with default profile) # top / bottom
 end tell
+```
+
+---
+
+## Slash Commands
+
+### `/smell` — Code smell review
+
+Runs a 5-step analysis against your current git diff. Use it inside any Claude Code session:
+
+```
+/smell              # diffs against origin/main by default
+/smell my-branch    # diffs against a specific branch
+```
+
+**Three catalogs:**
+
+| Catalog | What it checks |
+|---------|---------------|
+| **Clean Code** (Martin) | Naming, function shape, duplication, abstraction levels, magic numbers, Law of Demeter — 35 IDs (e.g. `CC.G5`, `CC.G30`, `CC.N1`) |
+| **Gang of Four** | Missing design patterns (Strategy, Factory, Observer, etc.) + 7 design smells (rigidity, fragility, opacity, etc.) |
+| **Python-specific** | 35 runtime/security IDs — `PY.BARE-EXCEPT`, `PY.MUTABLE-DEFAULT`, `PY.BLOCKING-IN-ASYNC`, and more |
+
+Every finding is assigned a severity (**BLOCKER → HIGH → MEDIUM → LOW → NIT**) with a one-sentence fix. The command auto-selects the right lens based on the diff — Clean Code for inline edits and naming, GoF for new classes and hierarchies.
+
+**Example output:**
+```markdown
+# Smell Report
+Base: `origin/main`
+Classification: `feature`
+Primary lens: `Clean Code`
+
+## Findings
+### [HIGH] CC.G5 — src/payments.py:42-60
+Duplicated retry logic across three call sites.
+Fix: extract into a shared `retry_with_backoff()` helper.
 ```
 
 ### Add a slash command
