@@ -30,20 +30,20 @@ tell application "iTerm"
         end tell
 
         tell s1
-            set name to "opus-4.7 | high"
-            write text "claude --model claude-opus-4-7 --effort high --name High-1"
+            set name to "opus-4.7 | high | 200k ctx"
+            write text "printf '\\033]1337;SetBadgeFormat=%s\\a' $(printf 'opus-4.7\\nhigh effort\\n200k ctx' | base64) && claude --model claude-opus-4-7 --effort high --name High-1"
         end tell
         tell s2
-            set name to "opus-4.7 | high"
-            write text "claude --model claude-opus-4-7 --effort high --name High-2"
+            set name to "opus-4.7 | high | 200k ctx"
+            write text "printf '\\033]1337;SetBadgeFormat=%s\\a' $(printf 'opus-4.7\\nhigh effort\\n200k ctx' | base64) && claude --model claude-opus-4-7 --effort high --name High-2"
         end tell
         tell s3
-            set name to "opus-4.7 | medium"
-            write text "claude --model claude-opus-4-7 --effort medium --name Medium"
+            set name to "opus-4.7 | medium | 200k ctx"
+            write text "printf '\\033]1337;SetBadgeFormat=%s\\a' $(printf 'opus-4.7\\nmedium effort\\n200k ctx' | base64) && claude --model claude-opus-4-7 --effort medium --name Medium"
         end tell
         tell s4
-            set name to "opus-4.7 | low"
-            write text "claude --model claude-opus-4-7 --effort low --name Low"
+            set name to "opus-4.7 | low | 200k ctx"
+            write text "printf '\\033]1337;SetBadgeFormat=%s\\a' $(printf 'opus-4.7\\nlow effort\\n200k ctx' | base64) && claude --model claude-opus-4-7 --effort low --name Low"
         end tell
     end tell
 end tell
