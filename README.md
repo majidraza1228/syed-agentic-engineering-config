@@ -4,6 +4,8 @@ Shell config, Claude Code workspace helpers, and status line tooling for agentic
 
 Tested with **Claude Code CLI** on macOS + iTerm2.
 
+![4-pane Claude workspace](assets/workspace.png)
+
 ---
 
 ## What's Inside
