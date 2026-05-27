@@ -91,9 +91,10 @@ compute_line() {
   ctx_seg=$(printf '[%s] %d%% (%s/%s)' "$bar" "$pct" "$used_s" "$max_s")
 
   if [ -n "$git_seg" ]; then
-    printf '%s  │  %s  │  %s\n' "$slug" "$git_seg" "$ctx_seg"
+    # Show as: {model} | {branch} | {percent}% ({used}/{total}k)
+    printf '%s | %s | %d%% (%s/%s)\n' "$model_name" "$git_seg" "$pct" "$used_s" "$max_s"
   else
-    printf '%s  │  %s\n' "$slug" "$ctx_seg"
+    printf '%s | %d%% (%s/%s)\n' "$model_name" "$pct" "$used_s" "$max_s"
   fi
 }
 
