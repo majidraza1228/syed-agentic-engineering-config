@@ -49,6 +49,9 @@ fi
 
 # --- chmod scripts ---
 chmod +x "$REPO/statusline.sh" "$REPO/statusline-daemon.sh" "$REPO/token-tracker.sh" "$REPO/token-report.sh" "$REPO/install.sh" "$REPO/bin/clip"
+if [ -d "$REPO/.codex" ]; then
+  chmod +x "$REPO"/.codex/*.sh
+fi
 
 # --- claude settings.json merge ---
 mkdir -p "$(dirname "$SETTINGS")"

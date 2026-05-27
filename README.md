@@ -18,6 +18,7 @@ Tested with **Claude Code CLI** on macOS + iTerm2.
 | `statusline-daemon.sh` | Background daemon that keeps the status line cache fresh every 2s |
 | `tmux.conf` | tmux config with vi keys, mouse support, and smart copy-to-clipboard |
 | `bin/clip` | Cross-platform clipboard shim (`pbcopy` / `wl-copy` / `xclip` / `xsel`) |
+| `docs/codex-developer-guide.md` | Comprehensive developer guide for the `codext` Codex workspace |
 | `.claude/commands/smell.md` | `/smell` slash command — code smell review (Clean Code + GoF + Python) |
 
 ---
@@ -113,6 +114,37 @@ claude --model sonnet --effort medium
 By default iTerm2 lets running processes overwrite the pane title. To keep the `opus-4.7 | high` labels visible:
 
 > iTerm2 → Settings → Profiles → Terminal → uncheck **"Allow title reporting"** and **"Terminal may set tab/session title"**
+
+---
+
+## The `codext` Command — 4-Pane Codex Workspace
+
+Running `codext` opens a separate 2×2 Codex workspace. On macOS it uses iTerm2; on zsh/WSL/CentOS 9 it falls back to tmux.
+
+For full setup, usage, customization, and troubleshooting details, see [`docs/codex-developer-guide.md`](docs/codex-developer-guide.md).
+
+Each pane launches a different model + reasoning type:
+
+| Pane | Model | Reasoning |
+|------|-------|-----------|
+| 1 | `gpt-5.5` | `xhigh` |
+| 2 | `gpt-5.4` | `high` |
+| 3 | `gpt-5.4-mini` | `medium` |
+| 4 | `gpt-5.3-codex` | `low` |
+
+The pane footer/title shows:
+
+```
+branch | model | reasoning | used/max tokens
+```
+
+Codex token usage is read best-effort from `~/.codex/logs_2.sqlite`, falling back to `~/.codex/log/codex-tui.log`, using Codex's own `total_usage_tokens` log line after each turn. Claude and Copilot remain separate: Claude uses the top-level `statusline*.sh` files with `~/.claude`, Copilot uses `.copilot/*` with `~/.copilot`, and Codex uses `.codex/*` with `~/.codex`.
+
+Override models or reasoning for the tmux fallback with environment variables:
+
+```zsh
+P1_MODEL=gpt-5.5 P1_EFFORT=high codext
+```
 
 ---
 

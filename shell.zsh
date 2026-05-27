@@ -61,3 +61,81 @@ EOF
     return 1
   fi
 }
+
+codext() {
+  local cwd="$PWD"
+  local branch
+  branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null || echo detached)"
+  local shell_file="${(%):-%x}"
+  local shell_dir=""
+  if [ -n "$shell_file" ] && [ -f "$shell_file" ]; then
+    shell_dir="${shell_file:A:h}"
+  fi
+  local repo_root="${AGENTIC_CONFIG_HOME:-${shell_dir:-$HOME/src/agentic-config}}"
+  local codex_dir=""
+  if [ -d "$repo_root/.codex" ]; then
+    codex_dir="$repo_root/.codex"
+  elif [ -d "$(pwd)/.codex" ]; then
+    codex_dir="$(pwd)/.codex"
+  fi
+
+  if [ -z "$codex_dir" ]; then
+    printf 'Could not find agentic-config .codex scripts. Set AGENTIC_CONFIG_HOME or run from the config repo.\n' >&2
+    return 1
+  fi
+
+  local runner="$codex_dir/run-pane.sh"
+  local tmux_script="$codex_dir/tmux-codext.sh"
+
+  if command -v osascript >/dev/null 2>&1; then
+    osascript - "$cwd" "$branch" "$runner" <<'EOF'
+on run argv
+  set cwd to item 1 of argv
+  set branch to item 2 of argv
+  set runner to item 3 of argv
+tell application "iTerm"
+    set w to (create window with default profile)
+    tell w
+        set s1 to current session
+
+        tell s1
+            set s2 to (split vertically with default profile)
+        end tell
+
+        tell s1
+            set s3 to (split horizontally with default profile)
+        end tell
+
+        tell s2
+            set s4 to (split horizontally with default profile)
+        end tell
+
+        tell s1
+            set name to branch & " | gpt-5.5 | xhigh | 0/272k"
+            write text "bash " & quoted form of runner & " " & quoted form of cwd & " gpt-5.5 xhigh Codex-XHigh 272000"
+        end tell
+        tell s2
+            set name to branch & " | gpt-5.4 | high | 0/272k"
+            write text "bash " & quoted form of runner & " " & quoted form of cwd & " gpt-5.4 high Codex-High 272000"
+        end tell
+        tell s3
+            set name to branch & " | gpt-5.4-mini | medium | 0/272k"
+            write text "bash " & quoted form of runner & " " & quoted form of cwd & " gpt-5.4-mini medium Codex-Medium 272000"
+        end tell
+        tell s4
+            set name to branch & " | gpt-5.3-codex | low | 0/272k"
+            write text "bash " & quoted form of runner & " " & quoted form of cwd & " gpt-5.3-codex low Codex-Low 272000"
+        end tell
+    end tell
+end tell
+end run
+EOF
+  elif [ -f "$tmux_script" ]; then
+    bash "$tmux_script" "$cwd" "$branch"
+  else
+    printf 'No macOS osascript and no tmux fallback found. Please install tmux or run on macOS/iTerm2.\n' >&2
+    return 1
+  fi
+}
+
+alias codex4=codext
