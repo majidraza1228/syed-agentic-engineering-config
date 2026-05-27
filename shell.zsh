@@ -139,3 +139,67 @@ EOF
 }
 
 alias codex4=codext
+
+claudet() {
+  local cwd="$PWD"
+  local branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null || echo detached)"
+  local shell_file="${(%):-%x}"
+  local shell_dir=""
+  if [ -n "$shell_file" ] && [ -f "$shell_file" ]; then
+    shell_dir="${shell_file:A:h}"
+  fi
+  local repo_root="${AGENTIC_CONFIG_HOME:-${shell_dir:-$HOME/syed-agentic-engineering-config}}"
+  local tmux_script=""
+  if [ -f "$repo_root/docs/claude/tmux-claudet.sh" ]; then
+    tmux_script="$repo_root/docs/claude/tmux-claudet.sh"
+  fi
+
+  if command -v osascript >/dev/null 2>&1; then
+    osascript - "$cwd" "$branch" <<'EOF'
+on run argv
+  set cwd to item 1 of argv
+  set branch to item 2 of argv
+tell application "iTerm"
+    set w to (create window with default profile)
+    tell w
+        set s1 to current session
+
+        tell s1
+            set s2 to (split vertically with default profile)
+        end tell
+
+        tell s1
+            set s3 to (split horizontally with default profile)
+        end tell
+
+        tell s2
+            set s4 to (split horizontally with default profile)
+        end tell
+
+        tell s1
+            set name to branch & " | opus-4-7 | high | 0/200k"
+            write text "cd " & quoted form of cwd & " && claude --model claude-opus-4-7 --name Opus-High-1"
+        end tell
+        tell s2
+            set name to branch & " | opus-4-7 | high | 0/200k"
+            write text "cd " & quoted form of cwd & " && claude --model claude-opus-4-7 --name Opus-High-2"
+        end tell
+        tell s3
+            set name to branch & " | sonnet-4-6 | 0/200k"
+            write text "cd " & quoted form of cwd & " && claude --model claude-sonnet-4-6 --name Sonnet-1"
+        end tell
+        tell s4
+            set name to branch & " | sonnet-4-6 | 0/200k"
+            write text "cd " & quoted form of cwd & " && claude --model claude-sonnet-4-6 --name Sonnet-2"
+        end tell
+    end tell
+end tell
+end run
+EOF
+  elif [ -n "$tmux_script" ] && command -v tmux >/dev/null 2>&1; then
+    bash "$tmux_script" "$cwd" "$branch"
+  else
+    printf 'No macOS osascript and no tmux fallback found. Please install tmux or run on macOS/iTerm2.\n' >&2
+    return 1
+  fi
+}
