@@ -111,3 +111,9 @@ Next steps:
   3. t                                 # launch the 4-pane Claude workspace
   4. Open a new Claude Code session    # status bar + /smell command available
 EOF
+# Copilot helper: install dependencies (tmux, jq, sqlite3, git, gawk)
+if [ "${1:-}" = "install-copilot-deps" ]; then
+  echo "Running Copilot dependency installer..."
+  bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.copilot/install-deps.sh"
+  exit 0
+fi

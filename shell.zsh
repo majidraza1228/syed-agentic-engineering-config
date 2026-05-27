@@ -4,7 +4,15 @@ ght() {
   source ~/.copilot/consumption-tracker.sh
   local cwd="$PWD"
   local branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null || echo detached)"
-  osascript - "$cwd" "$branch" <<'EOF'
+  local tmux_script=""
+  if [ -f "$HOME/.copilot/tmux-ght.sh" ]; then
+    tmux_script="$HOME/.copilot/tmux-ght.sh"
+  elif [ -f "$(pwd)/.copilot/tmux-ght.sh" ]; then
+    tmux_script="$(pwd)/.copilot/tmux-ght.sh"
+  fi
+
+  if command -v osascript >/dev/null 2>&1; then
+    osascript - "$cwd" "$branch" <<'EOF'
 on run argv
   set cwd to item 1 of argv
   set branch to item 2 of argv
@@ -45,4 +53,11 @@ tell application "iTerm"
 end tell
 end run
 EOF
+  elif [ -n "$tmux_script" ] && command -v tmux >/dev/null 2>&1; then
+    bash "$tmux_script" "$cwd" "$branch"
+  else
+    printf 'No macOS osascript and no tmux fallback found. Please install tmux or run on macOS/iTerm2.
+' >&2
+    return 1
+  fi
 }
