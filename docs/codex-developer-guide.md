@@ -57,6 +57,76 @@ If you install this repo somewhere else, set:
 export AGENTIC_CONFIG_HOME="$HOME/path/to/syed-agentic-engineering-config"
 ```
 
+## New Machine Setup Checklist
+
+Use this checklist when a developer brings this repo to a new machine.
+
+1. Install machine prerequisites:
+
+```sh
+brew install jq tmux sqlite3 git
+```
+
+On Linux or WSL, install the same tools with the system package manager.
+
+2. Install Codex CLI and authenticate it:
+
+```sh
+command -v codex
+codex
+```
+
+If `command -v codex` prints nothing, install Codex CLI using the team's approved method first. When `codex` opens for the first time, complete its login or API key flow. Do not put API keys in this repository.
+
+3. Clone this config repo:
+
+```sh
+git clone https://github.com/majidraza1228/syed-agentic-engineering-config.git ~/syed-agentic-engineering-config
+mkdir -p ~/src
+ln -s ~/syed-agentic-engineering-config ~/src/agentic-config
+cd ~/syed-agentic-engineering-config
+```
+
+4. Run the installer and reload the shell:
+
+```sh
+./install.sh
+exec zsh
+```
+
+5. Verify shell commands are available:
+
+```zsh
+type codext
+type codex4
+```
+
+6. Verify the Codex pane scripts:
+
+```sh
+bash -n .codex/run-pane.sh .codex/status.sh .codex/tmux-codext.sh
+```
+
+7. Open a project and start the Codex workspace:
+
+```zsh
+cd ~/path/to/project
+codext
+```
+
+8. Confirm expected behavior:
+
+- Four Codex panes open.
+- Each pane starts in the project directory.
+- Pane titles show `branch | model | effort | used/max tokens`.
+- Token usage starts at `0/272k` until Codex writes usage data.
+
+If the repo is installed somewhere other than `~/src/agentic-config`, add this to the developer's shell profile:
+
+```zsh
+export AGENTIC_CONFIG_HOME="$HOME/path/to/syed-agentic-engineering-config"
+```
+
 ## What `codext` Opens
 
 `codext` starts four Codex sessions against the same current working directory:
